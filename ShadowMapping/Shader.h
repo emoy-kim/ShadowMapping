@@ -14,7 +14,7 @@
 class ShaderGL
 {
    void readShaderFile(string& shader_contents, const char* shader_path) const;
-   bool checkCompileErrors(const GLuint& vertex_shader, const GLuint& fragment_shader);
+   bool checkCompileErrors(const GLuint& vertex_shader, const GLuint& fragment_shader) const;
 
 public:
    struct LightLocationSet
@@ -43,6 +43,7 @@ public:
    unordered_map<string, GLint> CustomLocations;
 
    ShaderGL();
+   ~ShaderGL();
 
    void setShader(const char* vertex_shader_path, const char* fragment_shader_path);
    void setUniformLocations(const uint& light_num);

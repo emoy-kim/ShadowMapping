@@ -96,6 +96,16 @@ void LightGL::setLightPosition(const vec4& light_position, const uint& light_ind
    Positions[light_index] = light_position;
 }
 
+vec4 LightGL::getLightPosition(const uint& light_index)
+{
+   return Positions[light_index];
+}
+
+vec3 LightGL::getSpotlightDirection(const uint& light_index)
+{
+   return SpotlightDirections[light_index];
+}
+
 void LightGL::activateLight(const uint& light_index)
 {
    if (light_index >= TotalLightNum) return;
@@ -108,22 +118,22 @@ void LightGL::deactivateLight(const uint& light_index)
    IsActivated[light_index] = false;
 }
 
-void LightGL::transferUniformsToShader(ShaderGL& shader)
+void LightGL::transferUniformsToShader(ShaderGL* shader)
 {
-   glUniform1i( shader.Location.UseLight, TurnLightOn ? 1 : 0 );
-   glUniform1i( shader.Location.LightNum, TotalLightNum );
-   glUniform4fv( shader.Location.GlobalAmbient, 1, &GlobalAmbientColor[0] );
+   glUniform1i( shader->Location.UseLight, TurnLightOn ? 1 : 0 );
+   glUniform1i( shader->Location.LightNum, TotalLightNum );
+   glUniform4fv( shader->Location.GlobalAmbient, 1, &GlobalAmbientColor[0] );
 
    for (uint i = 0; i < TotalLightNum; ++i) {
-      glUniform1i( shader.Location.Lights[i].LightSwitch, IsActivated[0] ? 1 : 0 );
-      glUniform4fv( shader.Location.Lights[i].LightPosition, 1, &Positions[i][0] );
-      glUniform4fv( shader.Location.Lights[i].LightAmbient, 1, &AmbientColors[i][0] );
-      glUniform4fv( shader.Location.Lights[i].LightDiffuse, 1, &DiffuseColors[i][0] );
-      glUniform4fv( shader.Location.Lights[i].LightSpecular, 1, &SpecularColors[i][0] );
-      glUniform3fv( shader.Location.Lights[i].SpotlightDirection, 1, &SpotlightDirections[i][0] ); 
-      glUniform1f( shader.Location.Lights[i].SpotlightExponent, SpotlightExponents[i] );
-      glUniform1f( shader.Location.Lights[i].SpotlightCutoffAngle, SpotlightCutoffAngles[i] );
-      glUniform3fv( shader.Location.Lights[i].LightAttenuationFactors, 1, &AttenuationFactors[i][0] );
+      glUniform1i( shader->Location.Lights[i].LightSwitch, IsActivated[0] ? 1 : 0 );
+      glUniform4fv( shader->Location.Lights[i].LightPosition, 1, &Positions[i][0] );
+      glUniform4fv( shader->Location.Lights[i].LightAmbient, 1, &AmbientColors[i][0] );
+      glUniform4fv( shader->Location.Lights[i].LightDiffuse, 1, &DiffuseColors[i][0] );
+      glUniform4fv( shader->Location.Lights[i].LightSpecular, 1, &SpecularColors[i][0] );
+      glUniform3fv( shader->Location.Lights[i].SpotlightDirection, 1, &SpotlightDirections[i][0] ); 
+      glUniform1f( shader->Location.Lights[i].SpotlightExponent, SpotlightExponents[i] );
+      glUniform1f( shader->Location.Lights[i].SpotlightCutoffAngle, SpotlightCutoffAngles[i] );
+      glUniform3fv( shader->Location.Lights[i].LightAttenuationFactors, 1, &AttenuationFactors[i][0] );
    }
 }
 
@@ -135,6 +145,17 @@ ObjectGL::ObjectGL() :
    DiffuseReflectionColor( 0.8f, 0.8f, 0.8f, 1.0f ), SpecularReflectionColor( 0.0f, 0.0f, 0.0f, 1.0f ),
    SpecularReflectionExponent( 0.0f )
 {
+}
+
+ObjectGL::~ObjectGL()
+{
+   if (ObjVAO != 0) {
+      glDeleteVertexArrays( 1, &ObjVAO );
+      glDeleteBuffers( 1, &ObjVBO );
+   }
+   for (const auto& texture_id : TextureID) {
+      if (texture_id != 0) glDeleteTextures( 1, &texture_id );
+   }
 }
 
 void ObjectGL::setEmissionColor(const vec4& emission_color)
@@ -378,19 +399,6 @@ void ObjectGL::setObject(
    addTexture( texture.data, texture.cols, texture.rows );
 }
 
-void ObjectGL::transferUniformsToShader(ShaderGL& shader)
-{
-   glUniform4fv( shader.Location.MaterialEmission, 1, &EmissionColor[0] );
-   glUniform4fv( shader.Location.MaterialAmbient, 1, &AmbientReflectionColor[0] );
-   glUniform4fv( shader.Location.MaterialDiffuse, 1, &DiffuseReflectionColor[0] );
-   glUniform4fv( shader.Location.MaterialSpecular, 1, &SpecularReflectionColor[0] );
-   glUniform1f( shader.Location.MaterialSpecularExponent, SpecularReflectionExponent );
-
-   for (const auto& texture : shader.Location.Texture) {
-      glUniform1i( texture.second, texture.first );
-   }
-}
-
 bool ObjectGL::readObjectFile(
    vector<vec3>& vertices,
    vector<vec3>& normals, 
@@ -447,4 +455,46 @@ bool ObjectGL::readObjectFile(
       textures.emplace_back( texture_buffer[texture_indices[i] - 1] );
    }
    return true;
+}
+
+void ObjectGL::setObject(
+   const GLenum& draw_mode, 
+   const string& obj_file_path, 
+   const string& texture_file_name
+)
+{
+   DrawMode = draw_mode;
+   vector<vec3> vertices, normals;
+   vector<vec2> textures;
+   readObjectFile( vertices, normals, textures, obj_file_path );
+   
+   for (uint i = 0; i < vertices.size(); ++i) {
+      DataBuffer.push_back( vertices[i].x );
+      DataBuffer.push_back( vertices[i].y );
+      DataBuffer.push_back( vertices[i].z );
+      DataBuffer.push_back( normals[i].x );
+      DataBuffer.push_back( normals[i].y );
+      DataBuffer.push_back( normals[i].z );
+      DataBuffer.push_back( textures[i].x );
+      DataBuffer.push_back( textures[i].y );
+      VerticesCount++;
+   }
+   const int n_bytes_per_vertex = 8 * sizeof(GLfloat);
+   prepareVertexBuffer( n_bytes_per_vertex );
+   prepareNormal();
+   prepareTexture( true );
+   addTexture( texture_file_name );
+}
+
+void ObjectGL::transferUniformsToShader(ShaderGL* shader)
+{
+   glUniform4fv( shader->Location.MaterialEmission, 1, &EmissionColor[0] );
+   glUniform4fv( shader->Location.MaterialAmbient, 1, &AmbientReflectionColor[0] );
+   glUniform4fv( shader->Location.MaterialDiffuse, 1, &DiffuseReflectionColor[0] );
+   glUniform4fv( shader->Location.MaterialSpecular, 1, &SpecularReflectionColor[0] );
+   glUniform1f( shader->Location.MaterialSpecularExponent, SpecularReflectionExponent );
+
+   for (const auto& texture : shader->Location.Texture) {
+      glUniform1i( texture.second, texture.first );
+   }
 }

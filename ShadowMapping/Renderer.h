@@ -21,12 +21,16 @@ class RendererGL
 
    vec2 ClickedPoint;
 
-   CameraGL* MainCamera;
-   ShaderGL ObjectShader;
+   shared_ptr<CameraGL> MainCamera;
+   shared_ptr<CameraGL> LightCamera;
+   shared_ptr<ShaderGL> ObjectShader;
+   shared_ptr<ShaderGL> ShadowShader;
    
    LightGL Lights;
    ObjectGL GroundObject, TigerObject, PandaObject;
 
+   GLuint FBO;
+   GLuint DepthTextureID;
 
    void registerCallbacks() const;
    void initialize();
@@ -47,8 +51,13 @@ class RendererGL
 
    void setLights();
    void setGroundObject();
+   void setPandaObject();
+   void setDepthFrameBuffer();
 
-   void drawGroundObject();
+   void drawGroundObject(ShaderGL* shader, CameraGL* camera);
+   void drawPandaObject(ShaderGL* shader, CameraGL* camera);
+   void drawDepthMapFromLightView(const uint& light_index);
+   void drawShadow(const uint& light_index);
    void render();
 
 

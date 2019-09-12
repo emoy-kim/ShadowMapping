@@ -34,6 +34,7 @@ public:
    uint TotalLightNum;
 
    LightGL();
+   ~LightGL() = default;
 
    bool isLightOn() const;
    void toggleLightSwitch();
@@ -58,10 +59,12 @@ public:
    void setSpotlightCutoffAngle(const float& spotlight_cutoff_angle_in_degree, const uint& light_index);
    void setAttenuationFactor(const vec3& attenuation_factor, const uint& light_index);
    void setLightPosition(const vec4& light_position, const uint& light_index);
+   vec4 getLightPosition(const uint& light_index);
+   vec3 getSpotlightDirection(const uint& light_index);
    void activateLight(const uint& light_index);
    void deactivateLight(const uint& light_index);
 
-   void transferUniformsToShader(ShaderGL& shader);
+   void transferUniformsToShader(ShaderGL* shader);
 };
 
 
@@ -94,6 +97,7 @@ public:
 
 
    ObjectGL();
+   ~ObjectGL();
 
    void setEmissionColor(const vec4& emission_color);
    void setAmbientReflectionColor(const vec4& ambient_reflection_color);
@@ -142,7 +146,13 @@ public:
       const Mat& texture
    );
 
+   void setObject(
+      const GLenum& draw_mode, 
+      const string& obj_file_path, 
+      const string& texture_file_name
+   );
+
    size_t addTexture(const string& texture_file_name);
    size_t addTexture(const uchar* image_buffer, const uint& width, const uint& height);
-   void transferUniformsToShader(ShaderGL& shader);
+   void transferUniformsToShader(ShaderGL* shader);
 };

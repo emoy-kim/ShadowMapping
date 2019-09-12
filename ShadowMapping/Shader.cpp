@@ -4,6 +4,11 @@ ShaderGL::ShaderGL() : ShaderProgram( 0 )
 {
 }
 
+ShaderGL::~ShaderGL()
+{
+   if (ShaderProgram != 0) glDeleteProgram( ShaderProgram );
+}
+
 void ShaderGL::readShaderFile(string& shader_contents, const char* shader_path) const
 {
    ifstream file(shader_path, ios::in);
@@ -20,7 +25,7 @@ void ShaderGL::readShaderFile(string& shader_contents, const char* shader_path) 
    file.close();
 }
 
-bool ShaderGL::checkCompileErrors(const GLuint& vertex_shader, const GLuint& fragment_shader)
+bool ShaderGL::checkCompileErrors(const GLuint& vertex_shader, const GLuint& fragment_shader) const
 {
    GLint compiled[2] = { 0, 0 };
    glGetShaderiv( vertex_shader, GL_COMPILE_STATUS, &compiled[0] );
@@ -85,6 +90,7 @@ void ShaderGL::setUniformLocations(const uint& light_num)
    Location.MaterialSpecularExponent = glGetUniformLocation( ShaderProgram, "Material.SpecularExponent" );
 
    Location.Texture.emplace_back( make_pair( 0, glGetUniformLocation( ShaderProgram, "BaseTexture" ) ) );
+   Location.Texture.emplace_back( make_pair( 1, glGetUniformLocation( ShaderProgram, "DepthMap" ) ) );
 
    Location.UseLight = glGetUniformLocation( ShaderProgram, "UseLight" );
    Location.LightNum = glGetUniformLocation( ShaderProgram, "LightNum" );
