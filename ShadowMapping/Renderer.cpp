@@ -1,7 +1,8 @@
 #include "Renderer.h"
 
 RendererGL* RendererGL::Renderer = nullptr;
-RendererGL::RendererGL() : Window( nullptr ), ClickedPoint( -1, -1 ), FBO( 0 ), DepthTextureID( 0 )
+RendererGL::RendererGL() :
+   Window( nullptr ), ClickedPoint( -1, -1 ), LightTheta( 0.0f ), FBO( 0 ), DepthTextureID( 0 )
 {
    Renderer = this;
    MainCamera = make_shared<CameraGL>();
@@ -200,12 +201,11 @@ void RendererGL::registerCallbacks() const
 
 void RendererGL::setLights()
 {  
-   const vec4 light_position(256.0f, 500.0f, 200.0f, 1.0f);
-   const vec4 ambient_color(0.3f, 0.3f, 0.3f, 1.0f);
+   const vec4 light_position(256.0f, 500.0f, 512.0f, 1.0f);
+   const vec4 ambient_color(1.0f, 1.0f, 1.0f, 1.0f);
    const vec4 diffuse_color(0.7f, 0.7f, 0.7f, 1.0f);
    const vec4 specular_color(0.9f, 0.9f, 0.9f, 1.0f);
-   const vec3 spotlight_direction(-1.0f, -1.0f, -1.5f);
-   Lights.addLight( light_position, ambient_color, diffuse_color, specular_color, spotlight_direction );
+   Lights.addLight( light_position, ambient_color, diffuse_color, specular_color );
 }
 
 void RendererGL::setGroundObject()
@@ -244,6 +244,32 @@ void RendererGL::setGroundObject()
    GroundObject.setDiffuseReflectionColor( { 1.0f, 1.0f, 1.0f, 1.0f } );
 }
 
+void RendererGL::setTigerObject()
+{
+   ifstream file("Samples/Tiger/tiger.txt");
+   int polygon_num;
+   file >> polygon_num;
+
+   const int vertex_num = polygon_num * 3;
+   vector<vec3> tiger_vertices(vertex_num);
+   vector<vec3> tiger_normals(vertex_num);
+   vector<vec2> tiger_textures(vertex_num);
+   for (int i = 0; i < polygon_num; ++i) {
+      int triangle_vertex_num;
+      file >> triangle_vertex_num;
+      for (int v = 0; v < triangle_vertex_num; ++v) {
+         const int index = i * triangle_vertex_num + v;
+         file >> tiger_vertices[index].x >> tiger_vertices[index].y >> tiger_vertices[index].z;
+         file >> tiger_normals[index].x >> tiger_normals[index].y >> tiger_normals[index].z;
+         file >> tiger_textures[index].x >> tiger_textures[index].y;
+      }
+   }
+   file.close();
+
+   TigerObject.setObject( GL_TRIANGLES, tiger_vertices, tiger_normals, tiger_textures, "Samples/Tiger/tiger.jpg" );
+   TigerObject.setDiffuseReflectionColor( { 1.0f, 1.0f, 1.0f, 1.0f } );
+}
+
 void RendererGL::setPandaObject()
 {
    PandaObject.setObject( GL_TRIANGLES, "Samples/Panda/panda.obj", "Samples/Panda/panda.png" );
@@ -252,14 +278,12 @@ void RendererGL::setPandaObject()
 
 void RendererGL::setDepthFrameBuffer()
 {
-   glBindFramebuffer( GL_FRAMEBUFFER, FBO );
-   glClearBufferfi( GL_DEPTH, 0, 1.0f, 0 );
-   glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-
    glCreateTextures( GL_TEXTURE_2D, 1, &DepthTextureID );
-   glTextureStorage2D( DepthTextureID, 1, GL_DEPTH_COMPONENT32F, MainCamera->getCameraWidth(), MainCamera->getCameraHeight() );
+   glTextureStorage2D( DepthTextureID, 1, GL_DEPTH_COMPONENT32F, LightCamera->getCameraWidth(), LightCamera->getCameraHeight() );
    glTextureParameteri( DepthTextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
    glTextureParameteri( DepthTextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+   glTextureParameteri( DepthTextureID, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE );
+   glTextureParameteri( DepthTextureID, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL );
 
    glCreateFramebuffers( 1, &FBO );
    glNamedFramebufferTexture2DEXT( FBO, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, DepthTextureID, 0 );
@@ -281,10 +305,29 @@ void RendererGL::drawGroundObject(ShaderGL* shader, CameraGL* camera)
    glDrawArrays( GroundObject.DrawMode, 0, GroundObject.VerticesCount );
 }
 
+void RendererGL::drawTigerObject(ShaderGL* shader, CameraGL* camera)
+{
+   const mat4 to_world =
+      translate( mat4(1.0f), vec3(250.0f, 0.0f, 330.0f) ) *
+      rotate( mat4(1.0f), radians( 180.0f ), vec3(0.0f, 1.0f, 0.0f) ) * 
+      rotate( mat4(1.0f), radians( -90.0f ), vec3(1.0f, 0.0f, 0.0f) ) *
+      scale( mat4(1.0f), vec3( 0.3f, 0.3f, 0.3f ) );
+   const mat4 model_view_projection = camera->ProjectionMatrix * camera->ViewMatrix * to_world;
+   glUniformMatrix4fv( shader->Location.World, 1, GL_FALSE, &to_world[0][0] );
+   glUniformMatrix4fv( shader->Location.View, 1, GL_FALSE, &camera->ViewMatrix[0][0] );
+   glUniformMatrix4fv( shader->Location.Projection, 1, GL_FALSE, &camera->ProjectionMatrix[0][0] );
+   glUniformMatrix4fv( shader->Location.ModelViewProjection, 1, GL_FALSE, &model_view_projection[0][0] );
+
+   glBindTextureUnit( shader->Location.Texture[0].first, TigerObject.TextureID[0] );
+   glBindVertexArray( TigerObject.ObjVAO );
+   glDrawArrays( TigerObject.DrawMode, 0, TigerObject.VerticesCount );
+}
+
 void RendererGL::drawPandaObject(ShaderGL* shader, CameraGL* camera)
 {
-   const mat4 to_world = translate( mat4(1.0f), vec3(250.0f, -5.0f, 150.0f) ) *
-      scale( mat4(1.0f), vec3( 50.0f, 50.0f, 50.0f ) );
+   const mat4 to_world = 
+      translate( mat4(1.0f), vec3(250.0f, -5.0f, 180.0f) ) *
+      scale( mat4(1.0f), vec3( 20.0f, 20.0f, 20.0f ) );
    const mat4 model_view_projection = camera->ProjectionMatrix * camera->ViewMatrix * to_world;
    glUniformMatrix4fv( shader->Location.World, 1, GL_FALSE, &to_world[0][0] );
    glUniformMatrix4fv( shader->Location.View, 1, GL_FALSE, &camera->ViewMatrix[0][0] );
@@ -300,33 +343,31 @@ void RendererGL::drawPandaObject(ShaderGL* shader, CameraGL* camera)
 
 void RendererGL::drawDepthMapFromLightView(const uint& light_index)
 {
-   glEnable( GL_DEPTH );
-   glDisable( GL_BLEND );
+   glEnable( GL_POLYGON_OFFSET_FILL );
+   glPolygonOffset( 2.0f, 4.0f );
 
    glBindFramebuffer( GL_FRAMEBUFFER, FBO );
-   glClearBufferfi( GL_DEPTH, 0, 1.0f, 0 );
+   glClearDepth( 1.0f );
+   glClear( GL_DEPTH_BUFFER_BIT );
 
    glUseProgram( ObjectShader->ShaderProgram );
 
-   const vec3 light_position = vec3(Lights.getLightPosition( light_index ));
    LightCamera->updateCameraPosition(
-      light_position,
-      light_position + Lights.getSpotlightDirection( light_index ),
+      vec3(Lights.getLightPosition( light_index )),
+      vec3(256.0f, 0.0f, 10.0f),
       vec3(0.0f, 1.0f, 0.0f)
    );
    
    drawGroundObject( ObjectShader.get(), LightCamera.get() );
+   drawTigerObject( ObjectShader.get(), LightCamera.get() );
    drawPandaObject( ObjectShader.get(), LightCamera.get() );
 
    glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+   glDisable( GL_POLYGON_OFFSET_FILL );
 }
 
 void RendererGL::drawShadow(const uint& light_index)
 {
-   glDisable( GL_DEPTH );
-   glEnable( GL_BLEND );
-   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
    glUseProgram( ShadowShader->ShaderProgram );
 
    Lights.transferUniformsToShader( ShadowShader.get() );
@@ -334,25 +375,27 @@ void RendererGL::drawShadow(const uint& light_index)
 
    const mat4 model_view_projection = LightCamera->ProjectionMatrix * LightCamera->ViewMatrix;
    glUniformMatrix4fv( ShadowShader->CustomLocations["LightModelViewProjectionMatrix"], 1, GL_FALSE, &model_view_projection[0][0] );
-
+   
    glBindTextureUnit( ShadowShader->Location.Texture[1].first, DepthTextureID );
    drawGroundObject( ShadowShader.get(), MainCamera.get() );
-
-   glEnable( GL_DEPTH );
-   glDisable( GL_BLEND );
 }
 
 void RendererGL::render()
 {
    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+   const float light_x = 1024.0f * cos( LightTheta ) + 256.0f;
+   const float light_z = 1024.0f * sin( LightTheta ) + 256.0f;
+   Lights.setLightPosition( vec4(light_x, 200.0f, light_z, 1.0f), 0 );
+
    drawDepthMapFromLightView( 0 );
    drawShadow( 0 );
      
    glUseProgram( ObjectShader->ShaderProgram );
    Lights.transferUniformsToShader( ObjectShader.get() );
+   drawTigerObject( ObjectShader.get(), MainCamera.get() );
    drawPandaObject( ObjectShader.get(), MainCamera.get() );
-
+   
    glBindVertexArray( 0 );
    glUseProgram( 0 );
 }
@@ -363,6 +406,7 @@ void RendererGL::play()
 
    setLights();
    setGroundObject();
+   setTigerObject();
    setPandaObject();
    setDepthFrameBuffer();
 
@@ -373,6 +417,9 @@ void RendererGL::play()
 
    while (!glfwWindowShouldClose( Window )) {
       render();
+
+      LightTheta += 0.01f;
+      if (LightTheta >= 360.0f) LightTheta -= 360.0f;
 
       glfwSwapBuffers( Window );
       glfwPollEvents();

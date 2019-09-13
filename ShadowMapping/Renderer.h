@@ -20,6 +20,7 @@ class RendererGL
    GLFWwindow* Window;
 
    vec2 ClickedPoint;
+   float LightTheta;
 
    shared_ptr<CameraGL> MainCamera;
    shared_ptr<CameraGL> LightCamera;
@@ -51,10 +52,12 @@ class RendererGL
 
    void setLights();
    void setGroundObject();
+   void setTigerObject();
    void setPandaObject();
    void setDepthFrameBuffer();
 
    void drawGroundObject(ShaderGL* shader, CameraGL* camera);
+   void drawTigerObject(ShaderGL* shader, CameraGL* camera);
    void drawPandaObject(ShaderGL* shader, CameraGL* camera);
    void drawDepthMapFromLightView(const uint& light_index);
    void drawShadow(const uint& light_index);

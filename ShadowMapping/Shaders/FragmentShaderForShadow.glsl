@@ -75,6 +75,16 @@ float getSpotlightFactor(in vec3 normalized_light_vector, in int light_index)
    return factor >= cos( radians( cutoff_angle ) ) ? pow( factor, Lights[light_index].SpotlightExponent ) : zero;
 }
 
+float getShadowFactor()
+{
+   if (zero <= depth_map_coord.x && depth_map_coord.x <= depth_map_coord.w &&
+       zero <= depth_map_coord.y && depth_map_coord.y <= depth_map_coord.w &&
+       zero < depth_map_coord.w) {
+      return textureProj( DepthMap, depth_map_coord );
+   }
+   return 1.0f;
+}
+
 vec4 calculateLightingEquation()
 {
    vec4 color = Material.EmissionColor + GlobalAmbient * Material.AmbientColor;
@@ -107,29 +117,15 @@ vec4 calculateLightingEquation()
       pow( specular_intensity, Material.SpecularExponent ) * 
       Lights[LightIndex].SpecularColor * Material.SpecularColor;
 
-   color += local_color;
+   color += local_color * getShadowFactor();
    return color;
-}
-
-bool isShadow()
-{
-   if (zero <= depth_map_coord.x && depth_map_coord.x <= depth_map_coord.w &&
-       zero <= depth_map_coord.y && depth_map_coord.y <= depth_map_coord.w &&
-       zero < depth_map_coord.w) {
-      return textureProj( DepthMap, depth_map_coord ) <= depth_map_coord.z;
-   }
-   return false;
 }
 
 void main()
 { 
-   final_color = isShadow() ? vec4(zero, zero, zero, one) : texture( BaseTexture, tex_coord );
-
+   final_color = texture( BaseTexture, tex_coord );
    if (UseLight != 0) {
       final_color *= calculateLightingEquation();
    }
    else final_color *= Material.DiffuseColor;
-
-   float x = textureProj( DepthMap, vec4(0.5,0.5,0.5,1.0) );
-   final_color = vec4(x, x, x, one);
 }
