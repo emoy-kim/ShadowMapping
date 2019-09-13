@@ -21,6 +21,5 @@
   * **s key**: move down
   * **i key**: main camera and projector reset
   * **l key**: light turn on/off
-  * **r key**: replay projector when video was projected
   * **enter key**: project an image/video
   * **q/ESC key**: exit
