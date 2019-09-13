@@ -22,13 +22,11 @@ class RendererGL
    vec2 ClickedPoint;
    float LightTheta;
 
-   shared_ptr<CameraGL> MainCamera;
-   shared_ptr<CameraGL> LightCamera;
-   shared_ptr<ShaderGL> ObjectShader;
-   shared_ptr<ShaderGL> ShadowShader;
+   shared_ptr<CameraGL> MainCamera, LightCamera;
+   shared_ptr<ShaderGL> ObjectShader, ShadowShader;
    
-   LightGL Lights;
-   ObjectGL GroundObject, TigerObject, PandaObject;
+   shared_ptr<LightGL> Lights;
+   shared_ptr<ObjectGL> GroundObject, TigerObject, PandaObject;
 
    GLuint FBO;
    GLuint DepthTextureID;
@@ -51,9 +49,9 @@ class RendererGL
    static void reshapeWrapper(GLFWwindow* window, int width, int height);
 
    void setLights();
-   void setGroundObject();
-   void setTigerObject();
-   void setPandaObject();
+   void setGroundObject() const;
+   void setTigerObject() const;
+   void setPandaObject() const;
    void setDepthFrameBuffer();
 
    void drawGroundObject(ShaderGL* shader, CameraGL* camera);
