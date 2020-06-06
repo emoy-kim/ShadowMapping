@@ -400,10 +400,10 @@ void RendererGL::drawShadow(int light_index) const
 
 void RendererGL::render() const
 {
-   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+   glClear( OPENGL_COLOR_BUFFER_BIT | OPENGL_DEPTH_BUFFER_BIT );
 
-   const float light_x = 1024.0f * cos( LightTheta ) + 256.0f;
-   const float light_z = 1024.0f * sin( LightTheta ) + 256.0f;
+   const float light_x = 1024.0f * cosf( LightTheta ) + 256.0f;
+   const float light_z = 1024.0f * sinf( LightTheta ) + 256.0f;
    Lights->setLightPosition( glm::vec4(light_x, 200.0f, light_z, 1.0f), 0 );
 
    drawDepthMapFromLightView( 0 );
