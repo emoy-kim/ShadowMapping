@@ -3,15 +3,6 @@
 ![shadowmapping](https://user-images.githubusercontent.com/17864157/64842655-d831c400-d63d-11e9-9886-804347ba0c6f.gif)
 
   
-## Test Environment
-  * Windows 10
-  * Visual Studio 2019
-  * Surface Book 2
-  
-## Library Dependencies
-  * OpenCV
-  * OpenGL
-
 ## Keyboard Commands
   * **Up Arrow**: move forward
   * **Down Arrow**: move backward
