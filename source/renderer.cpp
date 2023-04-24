@@ -1,6 +1,6 @@
-#include "Renderer.h"
+#include "renderer.h"
 
-RendererGL::RendererGL() : 
+RendererGL::RendererGL() :
    Window( nullptr ), FrameWidth( 1920 ), FrameHeight( 1080 ), FBO( 0 ), DepthTextureID( 0 ),
    ClickedPoint( -1, -1 ), LightTheta( 0.0f ), MainCamera( std::make_unique<CameraGL>() ),
    LightCamera( std::make_unique<CameraGL>() ), ObjectShader( std::make_unique<ShaderGL>() ),
@@ -49,9 +49,9 @@ void RendererGL::initialize()
       std::cout << "Failed to initialize GLAD" << std::endl;
       return;
    }
-   
+
    registerCallbacks();
-   
+
    glEnable( GL_DEPTH_TEST );
    glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
 
@@ -214,7 +214,7 @@ void RendererGL::registerCallbacks() const
 }
 
 void RendererGL::setLights() const
-{  
+{
    const glm::vec4 light_position(256.0f, 500.0f, 512.0f, 1.0f);
    const glm::vec4 ambient_color(1.0f, 1.0f, 1.0f, 1.0f);
    const glm::vec4 diffuse_color(0.7f, 0.7f, 0.7f, 1.0f);
@@ -229,7 +229,7 @@ void RendererGL::setGroundObject() const
    ground_vertices.emplace_back( 0.0f, 0.0f, 0.0f );
    ground_vertices.emplace_back( size, 0.0f, 0.0f );
    ground_vertices.emplace_back( size, 0.0f, size );
-   
+
    ground_vertices.emplace_back( 0.0f, 0.0f, 0.0f );
    ground_vertices.emplace_back( size, 0.0f, size );
    ground_vertices.emplace_back( 0.0f, 0.0f, size );
@@ -239,7 +239,7 @@ void RendererGL::setGroundObject() const
    ground_normals.emplace_back( 0.0f, 1.0f, 0.0f );
    ground_normals.emplace_back( 0.0f, 1.0f, 0.0f );
    ground_normals.emplace_back( 0.0f, 1.0f, 0.0f );
-   
+
    ground_normals.emplace_back( 0.0f, 1.0f, 0.0f );
    ground_normals.emplace_back( 0.0f, 1.0f, 0.0f );
    ground_normals.emplace_back( 0.0f, 1.0f, 0.0f );
@@ -248,18 +248,18 @@ void RendererGL::setGroundObject() const
    ground_textures.emplace_back( 0.0f, 0.0f );
    ground_textures.emplace_back( 1.0f, 0.0f );
    ground_textures.emplace_back( 1.0f, 1.0f );
-   
+
    ground_textures.emplace_back( 0.0f, 0.0f );
    ground_textures.emplace_back( 1.0f, 1.0f );
    ground_textures.emplace_back( 0.0f, 1.0f );
 
    const std::string sample_directory_path = std::string(CMAKE_SOURCE_DIR) + "/samples";
-   GroundObject->setObject( 
-      GL_TRIANGLES, 
-      ground_vertices, 
-      ground_normals, 
-      ground_textures, 
-      std::string(sample_directory_path + "/sand.jpg") 
+   GroundObject->setObject(
+      GL_TRIANGLES,
+      ground_vertices,
+      ground_normals,
+      ground_textures,
+      std::string(sample_directory_path + "/sand.jpg")
    );
    GroundObject->setDiffuseReflectionColor( { 1.0f, 1.0f, 1.0f, 1.0f } );
 }
@@ -287,12 +287,12 @@ void RendererGL::setTigerObject() const
    }
    file.close();
 
-   TigerObject->setObject( 
-      GL_TRIANGLES, 
-      tiger_vertices, 
-      tiger_normals, 
-      tiger_textures, 
-      std::string(sample_directory_path + "/Tiger/tiger.jpg") 
+   TigerObject->setObject(
+      GL_TRIANGLES,
+      tiger_vertices,
+      tiger_normals,
+      tiger_textures,
+      std::string(sample_directory_path + "/Tiger/tiger.jpg")
    );
    TigerObject->setDiffuseReflectionColor( { 1.0f, 1.0f, 1.0f, 1.0f } );
 }
@@ -300,10 +300,10 @@ void RendererGL::setTigerObject() const
 void RendererGL::setPandaObject() const
 {
    const std::string sample_directory_path = std::string(CMAKE_SOURCE_DIR) + "/samples";
-   PandaObject->setObject( 
-      GL_TRIANGLES, 
-      std::string(sample_directory_path + "/Panda/panda.obj"), 
-      std::string(sample_directory_path + "/Panda/panda.png") 
+   PandaObject->setObject(
+      GL_TRIANGLES,
+      std::string(sample_directory_path + "/Panda/panda.obj"),
+      std::string(sample_directory_path + "/Panda/panda.png")
    );
    PandaObject->setDiffuseReflectionColor( { 1.0f, 1.0f, 1.0f, 1.0f } );
 }
@@ -335,7 +335,7 @@ void RendererGL::drawTigerObject(ShaderGL* shader, CameraGL* camera) const
 {
    const glm::mat4 to_world =
       translate( glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, 330.0f) ) *
-      rotate( glm::mat4(1.0f), glm::radians( 180.0f ), glm::vec3(0.0f, 1.0f, 0.0f) ) * 
+      rotate( glm::mat4(1.0f), glm::radians( 180.0f ), glm::vec3(0.0f, 1.0f, 0.0f) ) *
       rotate( glm::mat4(1.0f), glm::radians( -90.0f ), glm::vec3(1.0f, 0.0f, 0.0f) ) *
       scale( glm::mat4(1.0f), glm::vec3( 0.3f, 0.3f, 0.3f ) );
    shader->transferBasicTransformationUniforms( to_world, camera, true );
@@ -347,11 +347,11 @@ void RendererGL::drawTigerObject(ShaderGL* shader, CameraGL* camera) const
 
 void RendererGL::drawPandaObject(ShaderGL* shader, CameraGL* camera) const
 {
-   const glm::mat4 to_world = 
+   const glm::mat4 to_world =
       translate(glm::mat4(1.0f), glm::vec3(250.0f, -5.0f, 180.0f) ) *
       scale(glm::mat4(1.0f), glm::vec3( 20.0f, 20.0f, 20.0f ) );
    shader->transferBasicTransformationUniforms( to_world, camera, true );
-   
+
    PandaObject->transferUniformsToShader( shader );
 
    glBindTextureUnit( 0, PandaObject->getTextureID( 0 ) );
@@ -375,10 +375,10 @@ void RendererGL::drawDepthMapFromLightView(int light_index) const
       glm::vec3(256.0f, 0.0f, 10.0f),
       glm::vec3(0.0f, 1.0f, 0.0f)
    );
-   
-   drawGroundObject( ObjectShader.get(), LightCamera.get() );
+
    drawTigerObject( ObjectShader.get(), LightCamera.get() );
    drawPandaObject( ObjectShader.get(), LightCamera.get() );
+   drawGroundObject( ObjectShader.get(), LightCamera.get() );
 
    glBindFramebuffer( GL_FRAMEBUFFER, 0 );
    glDisable( GL_POLYGON_OFFSET_FILL );
@@ -393,8 +393,10 @@ void RendererGL::drawShadow(int light_index) const
 
    const glm::mat4& model_view_projection = LightCamera->getProjectionMatrix() * LightCamera->getViewMatrix();
    glUniformMatrix4fv( ShadowShader->getLocation( "LightModelViewProjectionMatrix" ), 1, GL_FALSE, &model_view_projection[0][0] );
-   
+
    glBindTextureUnit( 1, DepthTextureID );
+   drawTigerObject( ShadowShader.get(), MainCamera.get() );
+   drawPandaObject( ShadowShader.get(), MainCamera.get() );
    drawGroundObject( ShadowShader.get(), MainCamera.get() );
 }
 
@@ -408,12 +410,7 @@ void RendererGL::render() const
 
    drawDepthMapFromLightView( 0 );
    drawShadow( 0 );
-     
-   glUseProgram( ObjectShader->getShaderProgram() );
-   Lights->transferUniformsToShader( ObjectShader.get() );
-   drawTigerObject( ObjectShader.get(), MainCamera.get() );
-   drawPandaObject( ObjectShader.get(), MainCamera.get() );
-   
+
    glBindVertexArray( 0 );
    glUseProgram( 0 );
 }
@@ -428,7 +425,7 @@ void RendererGL::play()
    setPandaObject();
    setDepthFrameBuffer();
 
-   ObjectShader->setUniformLocations( Lights->getTotalLightNum() );
+   ObjectShader->setBasicUniformLocations();
    ShadowShader->setUniformLocations( 1 );
    ShadowShader->addUniformLocation( "LightIndex" );
    ShadowShader->addUniformLocation( "LightModelViewProjectionMatrix" );

@@ -1,9 +1,9 @@
-#include "Camera.h"
+#include "camera.h"
 
 CameraGL::CameraGL() :
    CameraGL(
-      glm::vec3(1024.0f, 500.0f, 1024.0f), 
-      glm::vec3(256.0f, 0.0f, 256.0f), 
+      glm::vec3(1024.0f, 500.0f, 1024.0f),
+      glm::vec3(256.0f, 0.0f, 256.0f),
       glm::vec3(0.0f, 1.0f, 0.0f)
    )
 {
@@ -132,8 +132,8 @@ void CameraGL::updateCameraPosition(
    const glm::vec3& view_up_vector
 )
 {
-   InitCamPos = cam_position; 
-   InitRefPos = view_reference_position; 
+   InitCamPos = cam_position;
+   InitRefPos = view_reference_position;
    InitUpVec = view_up_vector;
    ViewMatrix = lookAt( InitCamPos, InitRefPos, InitUpVec );
    updateCamera();
