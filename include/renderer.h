@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "_Common.h"
-#include "Light.h"
-#include "Object.h"
+#include "base.h"
+#include "light.h"
+#include "object.h"
 
 class RendererGL
 {
@@ -44,7 +44,7 @@ private:
    std::unique_ptr<ObjectGL> TigerObject;
    std::unique_ptr<ObjectGL> PandaObject;
    std::unique_ptr<LightGL> Lights;
- 
+
    void registerCallbacks() const;
    void initialize();
 
