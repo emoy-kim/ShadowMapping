@@ -18,7 +18,6 @@ RendererGL::~RendererGL()
 {
    if (DepthTextureID != 0) glDeleteTextures( 1, &DepthTextureID );
    if (FBO != 0) glDeleteFramebuffers( 1, &FBO );
-   glfwTerminate();
 }
 
 void RendererGL::printOpenGLInformation()
@@ -69,24 +68,9 @@ void RendererGL::initialize()
    );
 }
 
-void RendererGL::error(int error, const char* description) const
-{
-   puts( description );
-}
-
-void RendererGL::errorWrapper(int error, const char* description)
-{
-   Renderer->error( error, description );
-}
-
 void RendererGL::cleanup(GLFWwindow* window)
 {
    glfwSetWindowShouldClose( window, GLFW_TRUE );
-}
-
-void RendererGL::cleanupWrapper(GLFWwindow* window)
-{
-   Renderer->cleanup( window );
 }
 
 void RendererGL::keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -94,71 +78,40 @@ void RendererGL::keyboard(GLFWwindow* window, int key, int scancode, int action,
    if (action != GLFW_PRESS) return;
 
    switch (key) {
-      case GLFW_KEY_UP:
-         MainCamera->moveForward();
-         break;
-      case GLFW_KEY_DOWN:
-         MainCamera->moveBackward();
-         break;
-      case GLFW_KEY_LEFT:
-         MainCamera->moveLeft();
-         break;
-      case GLFW_KEY_RIGHT:
-         MainCamera->moveRight();
-         break;
-      case GLFW_KEY_W:
-         MainCamera->moveUp();
-         break;
-      case GLFW_KEY_S:
-         MainCamera->moveDown();
-         break;
-      case GLFW_KEY_I:
-         MainCamera->resetCamera();
-         break;
       case GLFW_KEY_L:
-         Lights->toggleLightSwitch();
-         std::cout << "Light Turned " << (Lights->isLightOn() ? "On!\n" : "Off!\n");
+         Renderer->Lights->toggleLightSwitch();
+         std::cout << "Light Turned " << (Renderer->Lights->isLightOn() ? "On!\n" : "Off!\n");
          break;
       case GLFW_KEY_P: {
-         const glm::vec3 pos = MainCamera->getCameraPosition();
+         const glm::vec3 pos = Renderer->MainCamera->getCameraPosition();
          std::cout << "Camera Position: " << pos.x << ", " << pos.y << ", " << pos.z << "\n";
       } break;
       case GLFW_KEY_Q:
       case GLFW_KEY_ESCAPE:
-         cleanupWrapper( window );
+         cleanup( window );
          break;
       default:
          return;
    }
 }
 
-void RendererGL::keyboardWrapper(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-   Renderer->keyboard( window, key, scancode, action, mods );
-}
-
 void RendererGL::cursor(GLFWwindow* window, double xpos, double ypos)
 {
-   if (MainCamera->getMovingState()) {
+   if (Renderer->MainCamera->getMovingState()) {
       const auto x = static_cast<int>(round( xpos ));
       const auto y = static_cast<int>(round( ypos ));
-      const int dx = x - ClickedPoint.x;
-      const int dy = y - ClickedPoint.y;
-      MainCamera->moveForward( -dy );
-      MainCamera->rotateAroundWorldY( -dx );
+      const int dx = x - Renderer->ClickedPoint.x;
+      const int dy = y - Renderer->ClickedPoint.y;
+      Renderer->MainCamera->moveForward( -dy );
+      Renderer->MainCamera->rotateAroundWorldY( -dx );
 
       if (glfwGetMouseButton( window, GLFW_MOUSE_BUTTON_RIGHT ) == GLFW_PRESS) {
-         MainCamera->pitch( -dy );
+         Renderer->MainCamera->pitch( -dy );
       }
 
-      ClickedPoint.x = x;
-      ClickedPoint.y = y;
+      Renderer->ClickedPoint.x = x;
+      Renderer->ClickedPoint.y = y;
    }
-}
-
-void RendererGL::cursorWrapper(GLFWwindow* window, double xpos, double ypos)
-{
-   Renderer->cursor( window, xpos, ypos );
 }
 
 void RendererGL::mouse(GLFWwindow* window, int button, int action, int mods)
@@ -168,49 +121,33 @@ void RendererGL::mouse(GLFWwindow* window, int button, int action, int mods)
       if (moving_state) {
          double x, y;
          glfwGetCursorPos( window, &x, &y );
-         ClickedPoint.x = static_cast<int>(round( x ));
-         ClickedPoint.y = static_cast<int>(round( y ));
+         Renderer->ClickedPoint.x = static_cast<int>(round( x ));
+         Renderer->ClickedPoint.y = static_cast<int>(round( y ));
       }
-      MainCamera->setMovingState( moving_state );
+      Renderer->MainCamera->setMovingState( moving_state );
    }
 }
 
-void RendererGL::mouseWrapper(GLFWwindow* window, int button, int action, int mods)
+void RendererGL::mousewheel(GLFWwindow* window, double xoffset, double yoffset)
 {
-   Renderer->mouse( window, button, action, mods );
+   if (yoffset >= 0.0) Renderer->MainCamera->zoomIn();
+   else Renderer->MainCamera->zoomOut();
 }
 
-void RendererGL::mousewheel(GLFWwindow* window, double xoffset, double yoffset) const
+void RendererGL::reshape(GLFWwindow* window, int width, int height)
 {
-   if (yoffset >= 0.0) MainCamera->zoomIn();
-   else MainCamera->zoomOut();
-}
-
-void RendererGL::mousewheelWrapper(GLFWwindow* window, double xoffset, double yoffset)
-{
-   Renderer->mousewheel( window, xoffset, yoffset );
-}
-
-void RendererGL::reshape(GLFWwindow* window, int width, int height) const
-{
-   MainCamera->updateWindowSize( width, height );
+   Renderer->MainCamera->updateWindowSize( width, height );
    glViewport( 0, 0, width, height );
-}
-
-void RendererGL::reshapeWrapper(GLFWwindow* window, int width, int height)
-{
-   Renderer->reshape( window, width, height );
 }
 
 void RendererGL::registerCallbacks() const
 {
-   glfwSetErrorCallback( errorWrapper );
-   glfwSetWindowCloseCallback( Window, cleanupWrapper );
-   glfwSetKeyCallback( Window, keyboardWrapper );
-   glfwSetCursorPosCallback( Window, cursorWrapper );
-   glfwSetMouseButtonCallback( Window, mouseWrapper );
-   glfwSetScrollCallback( Window, mousewheelWrapper );
-   glfwSetFramebufferSizeCallback( Window, reshapeWrapper );
+   glfwSetWindowCloseCallback( Window, cleanup );
+   glfwSetKeyCallback( Window, keyboard );
+   glfwSetCursorPosCallback( Window, cursor );
+   glfwSetMouseButtonCallback( Window, mouse );
+   glfwSetScrollCallback( Window, mousewheel );
+   glfwSetFramebufferSizeCallback( Window, reshape );
 }
 
 void RendererGL::setLights() const

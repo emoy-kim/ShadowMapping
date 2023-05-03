@@ -49,21 +49,12 @@ private:
    void initialize();
 
    static void printOpenGLInformation();
-
-   void error(int error, const char* description) const;
-   void cleanup(GLFWwindow* window);
-   void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods);
-   void cursor(GLFWwindow* window, double xpos, double ypos);
-   void mouse(GLFWwindow* window, int button, int action, int mods);
-   void mousewheel(GLFWwindow* window, double xoffset, double yoffset) const;
-   void reshape(GLFWwindow* window, int width, int height) const;
-   static void errorWrapper(int error, const char* description);
-   static void cleanupWrapper(GLFWwindow* window);
-   static void keyboardWrapper(GLFWwindow* window, int key, int scancode, int action, int mods);
-   static void cursorWrapper(GLFWwindow* window, double xpos, double ypos);
-   static void mouseWrapper(GLFWwindow* window, int button, int action, int mods);
-   static void mousewheelWrapper(GLFWwindow* window, double xoffset, double yoffset);
-   static void reshapeWrapper(GLFWwindow* window, int width, int height);
+   static void cleanup(GLFWwindow* window);
+   static void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods);
+   static void cursor(GLFWwindow* window, double xpos, double ypos);
+   static void mouse(GLFWwindow* window, int button, int action, int mods);
+   static void mousewheel(GLFWwindow* window, double xoffset, double yoffset);
+   static void reshape(GLFWwindow* window, int width, int height);
 
    void setLights() const;
    void setGroundObject() const;
