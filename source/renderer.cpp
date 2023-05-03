@@ -361,9 +361,6 @@ void RendererGL::drawPandaObject(ShaderGL* shader, CameraGL* camera) const
 
 void RendererGL::drawDepthMapFromLightView(int light_index) const
 {
-   glEnable( GL_POLYGON_OFFSET_FILL );
-   glPolygonOffset( 2.0f, 4.0f );
-
    glBindFramebuffer( GL_FRAMEBUFFER, FBO );
    glClearDepth( 1.0f );
    glClear( GL_DEPTH_BUFFER_BIT );
@@ -381,7 +378,6 @@ void RendererGL::drawDepthMapFromLightView(int light_index) const
    drawGroundObject( ObjectShader.get(), LightCamera.get() );
 
    glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-   glDisable( GL_POLYGON_OFFSET_FILL );
 }
 
 void RendererGL::drawShadow(int light_index) const
