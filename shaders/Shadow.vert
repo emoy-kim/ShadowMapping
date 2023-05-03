@@ -28,7 +28,7 @@ void main()
 
    tex_coord = v_tex_coord;
 
-   vec4 position_in_light_cc = LightModelViewProjectionMatrix * vec4(v_position, 1.0f);
+   vec4 position_in_light_cc = LightModelViewProjectionMatrix * WorldMatrix * vec4(v_position, 1.0f);
    depth_map_coord.x = 0.5f * (position_in_light_cc.x + position_in_light_cc.w);
    depth_map_coord.y = 0.5f * (position_in_light_cc.y + position_in_light_cc.w);
    depth_map_coord.z = 0.5f * (position_in_light_cc.z + position_in_light_cc.w);
