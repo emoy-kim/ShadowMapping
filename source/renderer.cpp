@@ -324,8 +324,8 @@ void RendererGL::drawShadow(int light_index) const
    Lights->transferUniformsToShader( ShadowShader.get() );
    glUniform1i( ShadowShader->getLocation( "LightIndex" ), light_index );
 
-   const glm::mat4& model_view_projection = LightCamera->getProjectionMatrix() * LightCamera->getViewMatrix();
-   glUniformMatrix4fv( ShadowShader->getLocation( "LightModelViewProjectionMatrix" ), 1, GL_FALSE, &model_view_projection[0][0] );
+   const glm::mat4& view_projection = LightCamera->getProjectionMatrix() * LightCamera->getViewMatrix();
+   glUniformMatrix4fv( ShadowShader->getLocation( "LightViewProjectionMatrix" ), 1, GL_FALSE, &view_projection[0][0] );
 
    glBindTextureUnit( 1, DepthTextureID );
    drawTigerObject( ShadowShader.get(), MainCamera.get() );
@@ -361,7 +361,7 @@ void RendererGL::play()
    ObjectShader->setBasicUniformLocations();
    ShadowShader->setUniformLocations( 1 );
    ShadowShader->addUniformLocation( "LightIndex" );
-   ShadowShader->addUniformLocation( "LightModelViewProjectionMatrix" );
+   ShadowShader->addUniformLocation( "LightViewProjectionMatrix" );
 
    while (!glfwWindowShouldClose( Window )) {
       render();
